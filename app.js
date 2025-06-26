@@ -8,24 +8,22 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ─── UI REFS ───────────────────────────────────────────
-const candidateInput   = document.getElementById('candidateInput');
-const addCandidateBtn  = document.getElementById('addCandidate');
-const candidateList    = document.getElementById('candidateList');
-const startVoteBtn     = document.getElementById('startVote');
+const candidateInput = document.getElementById('candidateInput');
+const addCandidateBtn = document.getElementById('addCandidate');
+const candidateList = document.getElementById('candidateList');
+const startVoteBtn = document.getElementById('startVote');
 
-const resultSection    = document.getElementById('resultSection');
-const voteLinkInput    = document.getElementById('voteLink');
-const voteIdDisplay    = document.getElementById('voteIdDisplay');
+const resultSection = document.getElementById('resultSection');
+const voteLinkInput = document.getElementById('voteLink');
+const voteIdDisplay = document.getElementById('voteIdDisplay');
 const participantsList = document.getElementById('participantsList');
-const winnerDisplay    = document.getElementById('winnerDisplay');
+const winnerDisplay = document.getElementById('winnerDisplay');
 
 let candidates = [];
 
 function computeRCV(ballots, candidateNames) {
-  console.log(ballots, candidateNames);
-  
   if (!ballots.length) return 'No votes yet';
+  if (!candidateNames.length) return 'Tie (no candidates)';
 
   let active = new Set(candidateNames);
   let rounds = 0;
@@ -33,7 +31,7 @@ function computeRCV(ballots, candidateNames) {
   while (true) {
     rounds++;
     const counts = {};
-    active.forEach(n => counts[n] = 0);
+    active.forEach(c => counts[c] = 0);
 
     ballots.forEach(ballot => {
       for (let choice of ballot) {
@@ -45,28 +43,54 @@ function computeRCV(ballots, candidateNames) {
     });
 
     const total = ballots.length;
-    for (let [name, cnt] of Object.entries(counts)) {
-      if (cnt > total/2) {
-        return `${name} (won in ${rounds} round${rounds>1?'s':''})`;
+    let majorityWinner = null;
+    for (let candidate of active) {
+      if (counts[candidate] > total / 2) {
+        majorityWinner = candidate;
+        break;
       }
     }
-    // find lowest
-    const sorted = Object.entries(counts).sort((a,b) => a[1] - b[1]);
-    const lowestCount = sorted[0][1];
-    const highestCount = sorted[sorted.length-1][1];
-    // complete tie?
-    if (lowestCount === highestCount) {
+
+    if (majorityWinner) {
+      return majorityWinner;
+    }
+
+    const values = Object.values(counts);
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+    if (minVal === maxVal) {
       return `Tie between ${[...active].join(', ')}`;
     }
-    // eliminate all at lowestCount
-    sorted.filter(([_,cnt]) => cnt === lowestCount)
-          .forEach(([name]) => active.delete(name));
 
+    const toEliminate = [...active].filter(c => counts[c] === minVal);
+    toEliminate.forEach(c => active.delete(c));
+
+    if (active.size === 0) {
+      return 'Tie (all candidates eliminated)';
+    }
     if (active.size === 1) {
-      const [last] = active;
-      return `${last} (last candidate remaining)`;
+      const last = [...active][0];
+      return last;
     }
   }
+}
+
+function finalRCV(ballots, candidateNames) {
+  const winner = computeRCV(ballots, candidateNames);
+
+  if (winner.startsWith('Tie') || winner === 'No votes yet') {
+    return { winner, runnerUp: null };
+  }
+
+  const newCandidateNames = candidateNames.filter(c => c !== winner);
+  if (newCandidateNames.length === 0) {
+    return { winner, runnerUp: null };
+  }
+
+  const newBallots = ballots.map(ballot => ballot.filter(c => c !== winner));
+  const runnerUp = computeRCV(newBallots, newCandidateNames);
+
+  return { winner, runnerUp };
 }
 
 function watchVoters(voteId) {
@@ -78,25 +102,27 @@ function watchVoters(voteId) {
     snapshot.forEach(snap => {
       const { name, email, ranking } = snap.data();
       const ordered = ranking
-        .sort((a,b) => a.rank - b.rank)
+        .sort((a, b) => a.rank - b.rank)
         .map(r => r.name);
       ballots.push(ordered);
 
       const li = document.createElement('li');
-      li.innerHTML = `<strong>${name}(${email})</strong>: ${ordered.join(' → ')}`;
+      li.innerHTML = `<strong>${name}</strong> : ${ordered.join(' → ')}`;
       participantsList.appendChild(li);
     });
 
-    // If no participants, show placeholder
     if (ballots.length === 0) {
       participantsList.innerHTML = '<li>No participants yet.</li>';
     }
 
-    // Always compute & display winner
-    const winner = computeRCV(ballots, candidates);
-    winnerDisplay.textContent = winner;
+    const result = finalRCV(ballots, candidates);
+    winnerDisplay.innerHTML = `
+      <strong>Winner:</strong> ${result.winner} <br>
+      ${result.runnerUp ? `<strong>1st Runner-Up:</strong> ${result.runnerUp}` : ''}
+    `;
   });
 }
+
 
 const urlParams = new URLSearchParams(window.location.search);
 const existingVid = urlParams.get('voteId');
