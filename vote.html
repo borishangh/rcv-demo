@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Vote</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h2>Vote Page</h2>
+    <p id="voteIdDisplay"></p>
+
+    <button id="signInBtn">Sign in with Google</button>
+    <button id="logoutBtn" style="display:none">Logout</button>
+    <p id="userEmail"></p>
+
+    <div id="participantInputDiv" style="display:none; margin:1em 0;">
+        <label>
+            Your name:
+            <input id="participantName" type="text" placeholder="Enter your name" />
+        </label>
+    </div>
+
+    <div id="message"></div>
+    <div id="rankingForm"></div>
+    
+    <button id="clearBtn" style="display:none">Clear</button>
+    <button id="submitBtn" style="display:none">Submit</button>
+
+    <h3>Current Rankings</h3>
+    <ul id="currentRanks"></ul>
+
+    <script type="module" src="vote.js"></script>
+</body>
+
+</html>

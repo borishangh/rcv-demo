@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Ranked Choice Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <h2>Set up your vote</h2>
+
+  <!-- Candidate input + list -->
+  <input id="candidateInput" type="text" placeholder="Enter candidate name" />
+  <button id="addCandidate">Add</button>
+  <ul id="candidateList"></ul>
+  <button id="startVote">Start Vote</button>
+
+  <!-- Result section (hidden initially) -->
+  <section id="resultSection" style="display:none;">
+    <p id="voteIdDisplay"></p>
+    <label>
+      Shareable link:
+      <input id="voteLink" readonly style="width:100%;" />
+    </label>
+    <h3>Participants & Rankings</h3>
+    <ul id="participantsList"></ul>
+
+    <h3>Current RCV Winner</h3>
+    <p id="winnerDisplay">No votes yet</p>
+  </section>
+
+  <script type="module" src="app.js"></script>
+</body>
+
+</html>
