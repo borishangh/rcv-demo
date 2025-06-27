@@ -100,12 +100,7 @@ function watchVoters(voteId) {
     const ballots = [];
 
     snapshot.forEach(snap => {
-      const { name, email, ranking } = snap.data();
-      const ordered = ranking
-        .sort((a, b) => a.rank - b.rank)
-        .map(r => r.name);
-      ballots.push(ordered);
-
+      const { name } = snap.data();
       const li = document.createElement('li');
       li.innerHTML = `<strong>${name}</strong> voted`;
       participantsList.appendChild(li);
