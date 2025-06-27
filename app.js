@@ -107,7 +107,7 @@ function watchVoters(voteId) {
       ballots.push(ordered);
 
       const li = document.createElement('li');
-      li.innerHTML = `<strong>${name}</strong> : ${ordered.join(' → ')}`;
+      li.innerHTML = `<strong>${name}</strong> voted`;
       participantsList.appendChild(li);
     });
 
